@@ -1,0 +1,44 @@
+services:
+  backend:
+    build: .
+    image: serwerbb-backend:local
+    container_name: serwerbb-backend
+    restart: unless-stopped
+    mem_limit: 64m
+    memswap_limit: 64m
+    mem_reservation: 16m
+    cpus: "0.25"
+    environment:
+      DB_PATH: /data/serwerbb.db
+    ports:
+      - "127.0.0.1:18080:8080"
+    read_only: true
+    user: "65534:65534"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - backend_data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - caddy
+      - nas
+
+networks:
+  caddy:
+    external: true
+    name: caddy_default
+  nas:
+    external: true
+    name: voidnas_public
+
+volumes:
+  backend_data:
